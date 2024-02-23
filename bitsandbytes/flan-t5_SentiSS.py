@@ -2,14 +2,18 @@ import time
 from transformers import T5Tokenizer, T5ForConditionalGeneration, BitsAndBytesConfig
 import torch
 
-model_folder = "/mnt/New/Data/Vbox_SF/HuggingFaceLocal/"
-#model_folder = "/home/debbie/Dev/HF Finetuning/finetuned/"
+#Importing hf_local_config from parent folder takes a bit more work than if it were in the same folder as this script
+import os, sys, inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir) 
+from hf_local_config import *
+
 model_name = "flan-t5-xl"
-# model_folder = "/home/debbie/Dev/HF Finetuning/models/"
-# model_name = "flan-t5-base"
-model = model_folder + model_name
+model_id   = model_path+model_name
+
 max_output_tokens = 200
-tokenizer = T5Tokenizer.from_pretrained(model, local_files_only=True, legacy=True)
+tokenizer = T5Tokenizer.from_pretrained(model_id, local_files_only=True, legacy=True)
 
 nf4_config = BitsAndBytesConfig(
    load_in_4bit=True,
@@ -21,7 +25,7 @@ nf4_config = BitsAndBytesConfig(
 start_time = time.perf_counter()
 
 model = T5ForConditionalGeneration.from_pretrained(
-    model, 
+    model_id, 
     device_map="auto",
     quantization_config=nf4_config,
     torch_dtype=torch.bfloat16,
